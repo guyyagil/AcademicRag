@@ -11,3 +11,5 @@ __pycache__/
 .mypy_cache/
 .docker/
 *.db
+mongo_data/
+chroma_data/

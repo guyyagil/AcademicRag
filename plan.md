@@ -4,23 +4,23 @@
 
 **Goal:** Establish foundational environment and architecture.
 
-- [] **Repository Initialization**
-  - [] Set up Git repo with README and `.gitignore`
-  - [ ] Define project goals and structure in the `README.md`
+- [x] **Repository Initialization**
+  - [x] Set up Git repo with README and `.gitignore`
+  - [x] Define project goals and structure in the `README.md`
 
-- [ ] **Create Dockerized Environment**
-  - [ ] Write `docker-compose.yml` with services:
-    - [ ] `flask_app`
-    - [ ] `ollama`
-    - [ ] `chromadb`
-    - [ ] `mongodb`
-    - [ ] `mongo-express`
-  - [ ] Create `Dockerfile` for Flask app
-  - [ ] Add `.env` file for managing credentials and configs
+- [x] **Create Dockerized Environment**
+  - [x] Write `docker-compose.yml` with services:
+    - [x] `flask_app`
+    - [x] `ollama`
+    - [x] `chromadb`
+    - [x] `mongodb`
+    - [x] `mongo-express`
+  - [x] Create `Dockerfile` for Flask app
+  - [x] Add `.env` file for managing credentials and configs
 
-- [ ] **Define Python Project Structure**
-  - [ ] Create folders: `app/`, `modelfile/`, `utils/`, `database/`, `rag/`, `api/`
-  - [ ] Add placeholder `__init__.py` files
+- [x] **Define Python Project Structure**
+  - [x] Create folders: `app/`, `modelfile/`, `utils/`, `database/`, `rag/`, `api/`
+  - [x] Add placeholder `__init__.py` files
 
 ---
 
