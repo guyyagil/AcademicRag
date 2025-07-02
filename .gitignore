@@ -1,0 +1,13 @@
+# filepath: c:\Users\USER\slava project\.gitignore
+__pycache__/
+*.pyc
+.env
+.DS_Store
+.vscode/
+.idea/
+*.log
+*.sqlite3
+.pytest_cache/
+.mypy_cache/
+.docker/
+*.db

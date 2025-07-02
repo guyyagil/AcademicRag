@@ -1,0 +1,126 @@
+# 🧠 Academic RAG AI Agent - Development Checklist
+
+## ✅ Phase 1: Project Setup
+
+**Goal:** Establish foundational environment and architecture.
+
+- [] **Repository Initialization**
+  - [] Set up Git repo with README and `.gitignore`
+  - [ ] Define project goals and structure in the `README.md`
+
+- [ ] **Create Dockerized Environment**
+  - [ ] Write `docker-compose.yml` with services:
+    - [ ] `flask_app`
+    - [ ] `ollama`
+    - [ ] `chromadb`
+    - [ ] `mongodb`
+    - [ ] `mongo-express`
+  - [ ] Create `Dockerfile` for Flask app
+  - [ ] Add `.env` file for managing credentials and configs
+
+- [ ] **Define Python Project Structure**
+  - [ ] Create folders: `app/`, `modelfile/`, `utils/`, `database/`, `rag/`, `api/`
+  - [ ] Add placeholder `__init__.py` files
+
+---
+
+## ✅ Phase 2: Core Infrastructure
+
+**Goal:** Build PDF processing and vector storage.
+
+- [ ] **PDF Upload and Processing**
+  - [ ] `pdf_processor.py`: Extract and chunk text from PDFs
+  - [ ] `embeddings.py`: Generate embeddings and store in ChromaDB with metadata
+
+- [ ] **Database Setup**
+  - [ ] `chroma_client.py`: Handle ChromaDB interactions
+  - [ ] `mongo_client.py`: Log queries in MongoDB
+
+- [ ] **Test Vector Flow**
+  - [ ] Test PDF → embeddings → ChromaDB
+  - [ ] Validate document ID and metadata storage
+
+---
+
+## ✅ Phase 3: API Development
+
+**Goal:** Build endpoints and ensure request/response validation.
+
+- [ ] **Define API Endpoints**
+  - [ ] `POST /papers`: Upload PDFs
+  - [ ] `POST /query`: Ask natural language questions
+
+- [ ] **Pydantic Models**
+  - [ ] Input models: PDF upload, query input
+  - [ ] Output models: Answer text, citations
+
+- [ ] **Swagger UI**
+  - [ ] `swagger.py`: Define and serve API docs
+  - [ ] Confirm Swagger interface displays all endpoints
+
+---
+
+## ✅ Phase 4: RAG System
+
+**Goal:** Implement context-aware Retrieval-Augmented Generation.
+
+- [ ] **Prompt Engineering**
+  - [ ] `prompt_templates.py`: Define system prompt for academic tone
+
+- [ ] **RAG Chain Logic**
+  - [ ] `chain.py`: Retrieve relevant chunks
+  - [ ] Format and send to LLM with system prompt
+
+- [ ] **Output Parsing**
+  - [ ] `output_parser.py`: Extract clean answers
+  - [ ] Attach citations and optional confidence
+
+---
+
+## ✅ Phase 5: Logging & Monitoring
+
+**Goal:** Track system behavior and user queries.
+
+- [ ] **MongoDB Logging**
+  - [ ] `logging.py`: Log timestamp, query, answer, and metadata
+
+- [ ] **Mongo Express**
+  - [ ] Connect Mongo Express to view logs in browser
+
+---
+
+## ✅ Phase 6: Testing & Validation
+
+**Goal:** Ensure robustness and quality.
+
+- [ ] **Unit Tests**
+  - [ ] `pdf_processor`, `embeddings`, `RAG`, and `output_parser`
+
+- [ ] **Integration Tests**
+  - [ ] End-to-end test: upload → embed → query → answer
+
+- [ ] **Load Testing**
+  - [ ] Test large PDFs and concurrent users
+
+---
+
+## ✅ Phase 7: Final Touches
+
+**Goal:** Polish and document.
+
+- [ ] **Security & Input Handling**
+  - [ ] Sanitize PDF input
+  - [ ] Add rate limiting if needed
+
+- [ ] **Deployment Prep**
+  - [ ] Build and tag Docker images
+  - [ ] Add deployment commands/docs to README
+
+- [ ] **Documentation**
+  - [ ] Finalize `README.md` with:
+    - [ ] Project goals and tech stack
+    - [ ] Setup instructions
+    - [ ] API usage examples
+    - [ ] Swagger/OpenAPI link
+
+---
