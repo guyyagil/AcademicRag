@@ -5,3 +5,4 @@ pymongo
 gunicorn
 PyPDF2
 requests
+httpx

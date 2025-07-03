@@ -28,9 +28,9 @@
 
 **Goal:** Build PDF processing and vector storage.
 
-- [ ] **PDF Upload and Processing**
-  - [ ] `pdf_processor.py`: Extract and chunk text from PDFs
-  - [ ] `embeddings.py`: Generate embeddings and store in ChromaDB with metadata
+- [x] **PDF Upload and Processing**
+  - [x] `pdf_processor.py`: Extract and chunk text from PDFs
+  - [x] `embeddings.py`: Generate embeddings and store in ChromaDB with metadata
 
 - [ ] **Database Setup**
   - [ ] `chroma_client.py`: Handle ChromaDB interactions

@@ -13,3 +13,8 @@ __pycache__/
 *.db
 mongo_data/
 chroma_data/
+ollama_data/
+# Exclude PDF and test files (if not needed in repo)
+*.pdf
+# Jupyter Notebooks checkpoints
+.ipynb_checkpoints/
