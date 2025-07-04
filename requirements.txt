@@ -6,3 +6,4 @@ gunicorn
 PyPDF2
 requests
 httpx
+flasgger

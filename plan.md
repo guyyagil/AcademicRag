@@ -32,13 +32,13 @@
   - [x] `pdf_processor.py`: Extract and chunk text from PDFs
   - [x] `embeddings.py`: Generate embeddings and store in ChromaDB with metadata
 
-- [ ] **Database Setup**
-  - [ ] `chroma_client.py`: Handle ChromaDB interactions
-  - [ ] `mongo_client.py`: Log queries in MongoDB
+- [x] **Database Setup**
+  - [x] `chroma_client.py`: Handle ChromaDB interactions
+  - [x] `mongo_client.py`: Log queries in MongoDB
 
-- [ ] **Test Vector Flow**
-  - [ ] Test PDF → embeddings → ChromaDB
-  - [ ] Validate document ID and metadata storage
+- [x] **Test Vector Flow**
+  - [x] Test PDF → embeddings → ChromaDB
+  - [x] Validate document ID and metadata storage
 
 ---
 
@@ -46,17 +46,17 @@
 
 **Goal:** Build endpoints and ensure request/response validation.
 
-- [ ] **Define API Endpoints**
-  - [ ] `POST /papers`: Upload PDFs
-  - [ ] `POST /query`: Ask natural language questions
+- [x] **Define API Endpoints**
+  - [x] `POST /papers`: Upload PDFs
+  - [x] `POST /query`: Ask natural language questions
 
-- [ ] **Pydantic Models**
-  - [ ] Input models: PDF upload, query input
-  - [ ] Output models: Answer text, citations
+- [x] **Pydantic Models**
+  - [x] Input models: PDF upload, query input
+  - [x] Output models: Answer text, citations
 
-- [ ] **Swagger UI**
-  - [ ] `swagger.py`: Define and serve API docs
-  - [ ] Confirm Swagger interface displays all endpoints
+- [x] **Swagger UI**
+  - [x] `swagger.py`: Define and serve API docs
+  - [x] Confirm Swagger interface displays all endpoints
 
 ---
 
