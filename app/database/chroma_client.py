@@ -29,3 +29,16 @@ def query_embeddings(client, collection_name, query_embedding, top_k=5):
         n_results=top_k
     )
     return results
+
+def get_relevant_chunks(client, collection_name, query_embedding, top_k=5):
+    """Retrieve relevant context chunks (text) based on a query embedding."""
+    results = query_embeddings(client, collection_name, query_embedding, top_k)
+    return results['documents'][0] if results.get('documents') else []
+
+def get_relevant_chunks_and_metadata(client, collection_name, query_embedding, top_k=5):
+    """Retrieve relevant context chunks and their metadata."""
+    results = query_embeddings(client, collection_name, query_embedding, top_k)
+    documents = results['documents'][0] if results.get('documents') else []
+    metadatas = results['metadatas'][0] if results.get('metadatas') else []
+    return documents, metadatas
+

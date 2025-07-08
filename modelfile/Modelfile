@@ -4,7 +4,7 @@ PARAMETER temperature 0.1
 PARAMETER top_p 0.9
 PARAMETER top_k 40
 PARAMETER repeat_penalty 1.1
-PARAMETER num_ctx 4096
+PARAMETER num_ctx 2048
 
 SYSTEM """
 You are an expert academic research assistant specializing in analyzing and answering questions about research papers and academic documents.
@@ -37,3 +37,4 @@ Please provide a comprehensive answer based solely on the provided context. Incl
 
 Answer:
 """
+

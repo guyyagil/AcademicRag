@@ -1,8 +1,10 @@
 from flask import Blueprint, request, jsonify
-from utils.pdf_processor import extract_text_from_pdf, chunk_text
+from utils.pdf_processor import extract_text_from_pdf, chunk_text_with_metadata
 from utils.embedding import get_embeddings, get_embedding
-from database.chroma_client import get_chroma_client, add_embedding
+from database.chroma_client import get_chroma_client, add_embedding,get_relevant_chunks_and_metadata
 from api.schemas import QueryInput, QueryResponse, UploadResponse
+from rag.output_parser import parse_llm_output
+from rag.chain import run_rag_chain
 import os
 import tempfile
 
@@ -56,11 +58,11 @@ def upload_papers():
         file.save(filepath)
 
         text = extract_text_from_pdf(filepath)
-        chunks = chunk_text(text)
-        embeddings = get_embeddings(chunks)
+        chunked = chunk_text_with_metadata(text, filename)
+        embeddings = get_embeddings([c["text"] for c in chunked])
 
-        for i, (embedding, chunk) in enumerate(zip(embeddings, chunks)):
-            metadata = {"chunk_id": i, "text": chunk[:50], "document_name": filename}
+        for i, (embedding, chunk) in enumerate(zip(embeddings, chunked)):
+            metadata = chunk["metadata"]
             doc_id = add_embedding(client, collection_name, embedding, metadata)
             doc_ids.append(doc_id)
 
@@ -71,7 +73,7 @@ def upload_papers():
 @api.route('/query', methods=['POST'])
 def query_papers():
     """
-    Query uploaded papers with natural language questions.
+    Query the RAG system with a question.
     ---
     consumes:
       - application/json
@@ -84,10 +86,7 @@ def query_papers():
           properties:
             question:
               type: string
-              description: The question to ask about the papers
-              example: "What are the main findings?"
-          required:
-            - question
+              example: "What are the main findings of the paper?"
     responses:
       200:
         description: Query successful
@@ -103,35 +102,24 @@ def query_papers():
             citations:
               type: array
               items:
-                type: object
+                type: string
       400:
         description: Bad request
     """
     data = request.get_json()
-    validated = QueryInput(**data)  # Validate input
+    validated = QueryInput(**data)  
     question = validated.question
     if not question:
         return jsonify({"error": "No question provided"}), 400
 
-    # 1. Convert question to embedding
-    question_embedding = get_embedding(question)
-
-    # 2. Retrieve relevant chunks from ChromaDB
-    client = get_chroma_client()
-    collection_name = "papers"
-    collection = client.get_or_create_collection(collection_name)
-    results = collection.query(query_embeddings=[question_embedding], n_results=5)
-    retrieved_chunks = [doc for doc in results["documents"][0]]
-
-    # 3. (Optional) Format context for LLM
-    context = "\n\n".join(retrieved_chunks)
-
-    answer = "This is a placeholder. Implement LLM call here."
-
+    rag_result = run_rag_chain(question)
+    answer = rag_result["llm_output"]
+    context = rag_result["context"]
+    parsed = parse_llm_output(answer)
     response = QueryResponse(
         question=question,
-        answer=answer,
+        answer=parsed["answer"],
         context=context,
-        citations=results["metadatas"][0]
+        citations=parsed["citations"]
     )
-    return jsonify(response.model_dump())  # Serialize output
+    return jsonify(response.model_dump())
