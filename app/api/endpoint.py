@@ -63,7 +63,7 @@ def upload_papers():
 
         for i, (embedding, chunk) in enumerate(zip(embeddings, chunked)):
             metadata = chunk["metadata"]
-            doc_id = add_embedding(client, collection_name, embedding, metadata)
+            doc_id = add_embedding(client, collection_name, embedding, metadata, document=chunk["text"])
             doc_ids.append(doc_id)
 
         os.remove(filepath)
@@ -122,4 +122,5 @@ def query_papers():
         context=context,
         citations=parsed["citations"]
     )
+    
     return jsonify(response.model_dump())

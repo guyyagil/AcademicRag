@@ -6,8 +6,8 @@ def get_chroma_client(host="chromadb", port=8000):
     client = chromadb.HttpClient(host=host, port=port)
     return client
 
-def add_embedding(client, collection_name, embedding, metadata, doc_id=None):
-    """Add an embedding with metadata to a collection."""
+def add_embedding(client, collection_name, embedding, metadata, document=None, doc_id=None):
+    """Add an embedding with metadata and document text to a collection."""
     collection = client.get_or_create_collection(collection_name)
     
     # Generate a unique ID if not provided
@@ -17,6 +17,7 @@ def add_embedding(client, collection_name, embedding, metadata, doc_id=None):
     collection.add(
         embeddings=[embedding], 
         metadatas=[metadata], 
+        documents=[document],  # include document text for retrieval
         ids=[doc_id]
     )
     return doc_id

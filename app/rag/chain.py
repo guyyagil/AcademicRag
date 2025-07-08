@@ -1,5 +1,5 @@
 from rag.prompt_templates import build_prompt
-from database.chroma_client import get_chroma_client, get_relevant_chunks
+from database.chroma_client import get_chroma_client, get_relevant_chunks_and_metadata
 from utils.embedding import get_embedding
 import requests
 from flask import current_app
@@ -21,8 +21,14 @@ def run_rag_chain(question: str) -> dict:
 
     # 3. Retrieve relevant chunks
     top_k = current_app.config.get("DEFAULT_TOP_K", 5)
-    context_chunks = get_relevant_chunks(client, collection_name, query_embedding, top_k=top_k)
-    context = "\n\n".join(chunk for chunk in context_chunks if chunk)
+    documents, metadatas = get_relevant_chunks_and_metadata(client, collection_name, query_embedding, top_k=top_k)
+    # Build context entries with metadata labels for accurate citations
+    context_entries = []
+    for doc, meta in zip(documents, metadatas):
+        if isinstance(doc, str) and doc.strip():
+            label = f"[Document: {meta.get('document_name')}, Chunk: {meta.get('chunk_id')}]"
+            context_entries.append(f"{label}\n{doc}")
+    context = "\n\n".join(context_entries)
 
     # 4. Build prompt
     prompt = build_prompt(context=context, question=question)
