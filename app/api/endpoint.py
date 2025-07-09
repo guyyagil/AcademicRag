@@ -7,6 +7,7 @@ from rag.output_parser import parse_llm_output
 from rag.chain import run_rag_chain
 import os
 import tempfile
+from pydantic import BaseModel, ValidationError, validator
 
 api = Blueprint('api', __name__)
 
@@ -70,6 +71,34 @@ def upload_papers():
 
     return jsonify({"status": "success", "document_ids": doc_ids}), 200
 
+def get_uploaded_pdf_filenames():
+    temp_dir = tempfile.gettempdir()
+    return {f for f in os.listdir(temp_dir) if f.lower().endswith('.pdf')}
+
+class QueryInputWithPDF(QueryInput):
+    @validator('question')
+    def must_mention_existing_pdf(cls, v):
+        from database.chroma_client import get_chroma_client
+        client = get_chroma_client()
+        # Load all stored filenames from Chroma metadata
+        try:
+            collection = client.get_collection("papers")
+            metadatas = collection.get(include=["metadatas"])["metadatas"]
+            filenames = {meta.get("filename") or meta.get("document_name") for meta in metadatas if meta}
+        except Exception:
+            filenames = set()
+        # Check question text against each stored file name or its base
+        q_lower = v.lower()
+        for full in filenames:
+            if not full:
+                continue
+            name_lower = full.lower()
+            base = name_lower[:-4] if name_lower.endswith('.pdf') else name_lower
+            # match either full name or base name substring
+            if base in q_lower or name_lower in q_lower:
+                return v
+        raise ValueError(f"No referenced file found in Chroma DB among: {', '.join(filenames)}")
+
 @api.route('/query', methods=['POST'])
 def query_papers():
     """
@@ -107,12 +136,36 @@ def query_papers():
         description: Bad request
     """
     data = request.get_json()
-    validated = QueryInput(**data)  
+    try:
+        validated = QueryInputWithPDF(**data)
+    except ValidationError as e:
+        # Serialize error messages only
+        messages = [err.get("msg") for err in e.errors()]
+        return jsonify({"error": messages}), 400
     question = validated.question
     if not question:
         return jsonify({"error": "No question provided"}), 400
+    # Determine target file name for context filtering
+    client = get_chroma_client()
+    collection_name = "papers"
+    try:
+        collection = client.get_collection(collection_name)
+        metadatas = collection.get(include=["metadatas"])["metadatas"]
+        filenames = [meta.get("filename") or meta.get("document_name") for meta in metadatas if meta]
+    except Exception:
+        filenames = []
+    q_lower = question.lower()
+    target_file = None
+    for full in filenames:
+        if not full:
+            continue
+        name_lower = full.lower()
+        base = name_lower[:-4] if name_lower.endswith('.pdf') else name_lower
+        if name_lower in q_lower or base in q_lower:
+            target_file = full
+            break
 
-    rag_result = run_rag_chain(question)
+    rag_result = run_rag_chain(question, target_file)
     answer = rag_result["llm_output"]
     context = rag_result["context"]
     parsed = parse_llm_output(answer)
@@ -120,7 +173,8 @@ def query_papers():
         question=question,
         answer=parsed["answer"],
         context=context,
-        citations=parsed["citations"]
+        citations=parsed["citations"],
+        filename=target_file
     )
     
     return jsonify(response.model_dump())

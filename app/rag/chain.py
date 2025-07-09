@@ -3,8 +3,9 @@ from database.chroma_client import get_chroma_client, get_relevant_chunks_and_me
 from utils.embedding import get_embedding
 import requests
 from flask import current_app
+from typing import Optional
 
-def run_rag_chain(question: str) -> dict:
+def run_rag_chain(question: str, target_file: Optional[str] = None) -> dict:
     """
     Full RAG pipeline:
     1. Retrieve relevant context chunks from ChromaDB.
@@ -22,6 +23,15 @@ def run_rag_chain(question: str) -> dict:
     # 3. Retrieve relevant chunks
     top_k = current_app.config.get("DEFAULT_TOP_K", 5)
     documents, metadatas = get_relevant_chunks_and_metadata(client, collection_name, query_embedding, top_k=top_k)
+    # If a target_file is specified, filter chunks to only that file
+    if target_file:
+        filtered = [ (doc, meta) for doc, meta in zip(documents, metadatas)
+                     if meta.get('document_name') == target_file or meta.get('filename') == target_file ]
+        if filtered:
+            documents, metadatas = zip(*filtered)
+        else:
+            documents, metadatas = [], []
+
     # Build context entries with metadata labels for accurate citations
     context_entries = []
     for doc, meta in zip(documents, metadatas):

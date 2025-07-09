@@ -13,3 +13,4 @@ class QueryResponse(BaseModel):
     answer: str
     context: str
     citations: Optional[list]
+    filename: Optional[str]
