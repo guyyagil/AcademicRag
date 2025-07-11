@@ -5,7 +5,7 @@ import requests
 from flask import current_app
 from typing import Optional
 
-def run_rag_chain(question: str, target_file: Optional[str] = None) -> dict:
+def run_rag_chain(question: str, target_files: Optional[list] = None) -> dict:
     """
     Full RAG pipeline:
     1. Retrieve relevant context chunks from ChromaDB.
@@ -23,14 +23,29 @@ def run_rag_chain(question: str, target_file: Optional[str] = None) -> dict:
     # 3. Retrieve relevant chunks
     top_k = current_app.config.get("DEFAULT_TOP_K", 5)
     documents, metadatas = get_relevant_chunks_and_metadata(client, collection_name, query_embedding, top_k=top_k)
-    # If a target_file is specified, filter chunks to only that file
-    if target_file:
-        filtered = [ (doc, meta) for doc, meta in zip(documents, metadatas)
-                     if meta.get('document_name') == target_file or meta.get('filename') == target_file ]
+    # Keep originals for fallback
+    orig_docs, orig_meta = documents, metadatas
+    # If target_files are specified, filter accordingly
+    if target_files:
+        filtered = []
+        # single-file filter or union for multiple
+        for doc, meta in zip(orig_docs, orig_meta):
+            name = meta.get('document_name') or meta.get('filename')
+            if name in target_files:
+                filtered.append((doc, meta))
         if filtered:
             documents, metadatas = zip(*filtered)
         else:
             documents, metadatas = [], []
+        # fallback: if too few filtered chunks, revert to no filter
+        min_chunks = current_app.config.get('MIN_FILE_CHUNKS', 1)
+        if len(documents) < min_chunks:
+            documents, metadatas = orig_docs, orig_meta
+    
+    # For multi-file queries, prepend hint to question
+    if target_files and len(target_files) > 1:
+        hint = f"Compare content from {', '.join(target_files)}. Use only these documents.\n"
+        question = hint + question
 
     # Build context entries with metadata labels for accurate citations
     context_entries = []

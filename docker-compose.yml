@@ -14,7 +14,7 @@ services:
       - mongodb
 
   ollama:
-    image: ollama/ollama
+    image: ollama/ollama:latest
     container_name: ollama
     ports:
       - "11434:11434"
@@ -30,9 +30,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./chroma_data:/chroma/chroma
-    environment:
-      - CHROMA_SERVER_HOST=0.0.0.0
+      - ./chroma_data:/chroma/.chroma/index       
 
   mongodb:
     image: mongo:latest

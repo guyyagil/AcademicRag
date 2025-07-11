@@ -5,6 +5,7 @@ from config import Config
 
 app = Flask(__name__)
 app.config.from_object(Config)
+app.json.sort_keys = False
 init_swagger(app)  # Enable Swagger UI
 
 app.register_blueprint(api, url_prefix='/api')

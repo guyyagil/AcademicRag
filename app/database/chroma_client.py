@@ -1,9 +1,10 @@
-import chromadb
 import uuid
+import chromadb
+from chromadb import HttpClient
 
 def get_chroma_client(host="chromadb", port=8000):
     """Initialize and return a ChromaDB client."""
-    client = chromadb.HttpClient(host=host, port=port)
+    client = HttpClient(host=host, port=port)
     return client
 
 def add_embedding(client, collection_name, embedding, metadata, document=None, doc_id=None):
@@ -42,4 +43,6 @@ def get_relevant_chunks_and_metadata(client, collection_name, query_embedding, t
     documents = results['documents'][0] if results.get('documents') else []
     metadatas = results['metadatas'][0] if results.get('metadatas') else []
     return documents, metadatas
+
+
 

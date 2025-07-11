@@ -81,11 +81,11 @@
 
 **Goal:** Track system behavior and user queries.
 
-- [ ] **MongoDB Logging**
-  - [ ] `logging.py`: Log timestamp, query, answer, and metadata
+- [x] **MongoDB Logging**
+  - [x] `logging.py`: Log timestamp, query, answer, and metadata
 
-- [ ] **Mongo Express**
-  - [ ] Connect Mongo Express to view logs in browser
+- [x] **Mongo Express**
+  - [x] Connect Mongo Express to view logs in browser
 
 ---
 

@@ -7,3 +7,13 @@ PyPDF2
 requests
 httpx
 flasgger
+python-dotenv
+Werkzeug
+
+
+
+
+
+
+
+
