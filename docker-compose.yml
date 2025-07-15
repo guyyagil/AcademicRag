@@ -13,18 +13,24 @@ services:
       - ollama
       - chromadb
       - mongodb
-
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
     ports:
       - "11434:11434"
     volumes:
-      - ./ollama_data:/root/.ollama
       - ./modelfile:/modelfile
+      - ./ollama_data:/root/.ollama
     environment:
       - OLLAMA_HOST=0.0.0.0
-
+      - OLLAMA_CONTEXT_LENGTH=2048
+    # Run both create and serve in one shell invocation
+    entrypoint:
+      - sh
+      - -c
+      - |
+        ollama create my-custom-model -f /modelfile/Modelfile || true &&
+        ollama serve
   chromadb:
     image: chromadb/chroma:latest
     container_name: chromadb

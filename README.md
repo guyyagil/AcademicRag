@@ -15,13 +15,14 @@ It combines:
 - Fully containerized with Docker Compose  
 
 ## Directory Structure
-```
+```plaintext
 slava project/
 ├─ app/                  # Flask application
 │  ├─ api/               # REST endpoints (e.g. /logs)
 │  └─ rag/               # LLM output parser
 ├─ modelfile/
 │  └─ Modelfile          # Ollama model definition
+├─ Ollama.Dockerfile     # Builds custom Ollama model image
 ├─ docker-compose.yml    # Multi-container setup
 ├─ Dockerfile            # Flask service build
 ├─ requirements.txt      # Python deps
@@ -48,6 +49,7 @@ slava project/
    ```
 
 3. Build & run containers  
+   This command also builds the Ollama image using `Ollama.Dockerfile` to bake in your custom model:
    ```sh
    docker-compose up --build -d
    ```
@@ -90,25 +92,24 @@ slava project/
 
 ## Customizing the Model
 
-Edit `modelfile/Modelfile`:
-```plain
-FROM llama2
-PARAMETER temperature 0.25
-```
-Rebuild Ollama image:
-```sh
-docker exec -it ollama ollama create my-model -f /modelfile/Modelfile
-```
+- Edit `modelfile/Modelfile` as needed:
+  ```plain
+  FROM llama2
+  PARAMETER temperature 0.25
+  ```
+- Rebuild and load your custom model image using Docker Compose:
+  ```sh
+  docker-compose up -d --build ollama
+  ```
+  This uses `Ollama.Dockerfile` to bake your `modelfile/Modelfile` into the `guyyagil/ollama-custom:latest` image.
 
 ## Pushing Images to Docker Hub
 
-1. Build & tag:
+1. Build all images:
    ```sh
    docker-compose build
-   docker tag flask_app:latest guyyagil/flask_app:latest
-   docker commit ollama guyyagil/ollama-custom:latest
    ```
-2. Push:
+2. Push to Docker Hub:
    ```sh
    docker login
    docker push guyyagil/flask_app:latest

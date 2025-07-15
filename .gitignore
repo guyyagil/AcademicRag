@@ -1,4 +1,5 @@
 # filepath: c:\Users\USER\slava project\.gitignore
+venv/
 __pycache__/
 *.pyc
 .env
