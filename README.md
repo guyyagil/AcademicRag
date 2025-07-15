@@ -54,12 +54,15 @@ slava project/
 
 4. Access services  
    - Flask API:  http://localhost:5000  
+   - Swagger UI (interactive API docs): http://localhost:5000/apidocs  
    - Mongo-Express: http://localhost:8081  
    - Ollama LLM: use `ollama` CLI on host or container port `11434`  
    - Chroma HTTP API: http://localhost:8000  
 
 ## API Usage
 
+- **Interactive docs**  
+  Browse and test endpoints in Swagger UI:
 - POST `/ask`  
   ```json
   { "query": "Your question here" }
