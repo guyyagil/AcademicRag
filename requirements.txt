@@ -9,7 +9,7 @@ httpx
 flasgger
 python-dotenv
 Werkzeug
-
+flask-restx
 
 
 

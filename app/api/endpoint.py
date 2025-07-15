@@ -1,17 +1,20 @@
 from flask import Blueprint, request, jsonify, current_app
 from flasgger import swag_from
-from collections import OrderedDict
+from typing import Any, Dict
 from utils.pdf_processor import extract_text_from_pdf, chunk_text_with_metadata
 from utils.embedding import get_embeddings
 from database.chroma_client import get_chroma_client, add_embedding
-from api.schemas import QueryInput
 from rag.output_parser import parse_llm_output
 from rag.chain import run_rag_chain
-from pydantic import ValidationError, validator
+from pydantic import  BaseModel, ValidationError, field_validator
 from database.mongo_client import get_mongo_client, log_query, get_logs
 from datetime import datetime
 import os
 import tempfile
+
+class QueryInput(BaseModel) :
+  question: str
+
 
 api = Blueprint('api', __name__)
 
@@ -28,7 +31,7 @@ api = Blueprint('api', __name__)
         }
     ],
     'responses': {
-        200: {'description': 'Documents uploaded successfully'},
+        200: {'description': 'Documents uploaded successfully'} ,
         400: {'description': 'Invalid request'}
     }
 })
@@ -65,7 +68,7 @@ def upload_papers():
     return jsonify({"success": "true", "document_ids": doc_ids}), 200
 
 class QueryInputWithPDF(QueryInput):
-    @validator('question')
+    @field_validator('question')
     def must_mention_existing_pdf(cls, v):
         client = get_chroma_client()
         try:
@@ -83,10 +86,14 @@ class QueryInputWithPDF(QueryInput):
             base = name_lower[:-4] if name_lower.endswith('.pdf') else name_lower
             if base in q_lower or name_lower in q_lower:
                 return v
-        raise ValueError(f"No referenced file found in Chroma DB among: {', '.join(filenames)}")
+        raise ValueError(f"No referenced file found among: {', '.join(filenames)}")
 
-def api_response(success: bool, msg: str, data=None, status_code: int = 200):
-    payload = OrderedDict(success=success, msg=msg, data=data)
+def api_response(success: bool, msg: str, data: Any = None, status_code: int = 200):
+    payload: Dict[str, Any] = {
+        "success": success,
+        "msg": msg,
+        "data": data
+    }
     return jsonify(payload), status_code
 
 @api.route('/query', methods=['POST'])
@@ -117,12 +124,32 @@ def query_papers():
     start_time = datetime.utcnow()
     data = request.get_json()
     try:
-        validated = QueryInputWithPDF(**data)
+        # Basic schema validation without Pydantic filename check
+        validated = QueryInput(**data)
     except ValidationError as e:
         messages = [err.get("msg") for err in e.errors()]
         return api_response(False, "; ".join(messages), None, 400)
 
     question = validated.question
+    # Ensure the question mentions at least one existing PDF filename
+    try:
+        collection = get_chroma_client().get_collection("papers")
+        metadatas = collection.get(include=["metadatas"])["metadatas"]
+        filenames = {meta.get("filename") or meta.get("document_name") for meta in metadatas if meta}
+    except Exception:
+        filenames = set()
+    q_lower = question.lower()
+    match_found = False
+    for full in filenames:
+        if not full:
+            continue
+        name_lower = full.lower()
+        base = name_lower[:-4] if name_lower.endswith('.pdf') else name_lower
+        if base in q_lower or name_lower in q_lower:
+            match_found = True
+            break
+    if not match_found:
+        return api_response(False, "Question did not mention any existing PDF filename", None, 400)
     client = get_chroma_client()
     try:
         collection = client.get_collection("papers")
@@ -178,14 +205,14 @@ def query_papers():
 
 @api.route('/logs', methods=['GET'])
 @swag_from({
+    'description': 'Retrieves query logs. Both start_time and end_time are optional UTC ISO-8601 timestamps.',
     'parameters': [
         {
-            'in': 'query', 'name': 'start_time', 'type': 'string', 'format': 'date-time',
-            'required': False, 'description': 'ISO timestamp to filter logs on or after this time'
+            'in': 'query', 'name': 'start_time', 'required': False, 'description': '*Optional* Starting time filter UTC ISO-8601 timestamp'
         },
         {
-            'in': 'query', 'name': 'end_time', 'type': 'string', 'format': 'date-time',
-            'required': False, 'description': 'ISO timestamp to filter logs on or before this time'
+            'in': 'query', 'name': 'end_time',
+            'required': False, 'description': "*Optional* End time filter UTC ISO-8601 timestamp" 
         }
     ],
     'responses': {
@@ -217,4 +244,7 @@ def get_query_logs():
             entry['timestamp'] = entry['timestamp'].isoformat()
         safe_logs.append(entry)
 
-    return api_response(True, 'Logs retrieved', {'logs': safe_logs}, 200)
+    return api_response(True, "Query logs retrieved", safe_logs, 200)
+
+
+
