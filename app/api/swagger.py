@@ -1,4 +1,3 @@
-import os
 from flasgger import Swagger
 
 

@@ -10,9 +10,12 @@ services:
     volumes:
       - ./app:/app
     depends_on:
-      - ollama
-      - chromadb
-      - mongodb
+      ollama:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+      mongodb:
+        condition: service_started
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
@@ -24,13 +27,49 @@ services:
     environment:
       - OLLAMA_HOST=0.0.0.0
       - OLLAMA_CONTEXT_LENGTH=2048
-    # Run both create and serve in one shell invocation
+      - OLLAMA_ENABLE_EMBEDDINGS=true
+    # optional healthcheck so other services wait until Ollama is ready
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # pull and create models, then start Ollama server
     entrypoint:
       - sh
       - -c
       - |
-        ollama create my-custom-model -f /modelfile/Modelfile || true &&
-        ollama serve
+        set -e
+        ollama serve &
+        pid=$$!
+        echo "Starting Ollama server..."
+        until ollama list > /dev/null 2>&1; do
+          echo "Ollama server not ready yet, waiting..."
+          sleep 1
+        done
+        echo "Ollama server is ready!"
+        
+        # Pull embedding model if not already present
+        if ! ollama list | grep -q "nomic-embed-text"; then
+          echo "Pulling nomic-embed-text model (this may take several minutes)..."
+          ollama pull nomic-embed-text
+          echo "nomic-embed-text model downloaded successfully!"
+        else
+          echo "nomic-embed-text model already exists"
+        fi
+        
+        # Create custom model if not already present
+        if ! ollama list | grep -q "my-custom-model"; then
+          echo "Creating my-custom-model from Modelfile..."
+          ollama create my-custom-model -f /modelfile/Modelfile
+          echo "my-custom-model created successfully!"
+        else
+          echo "my-custom-model already exists"
+        fi
+        
+        echo "All models ready. Ollama server running and accepting connections."
+        wait $$pid
+
   chromadb:
     image: chromadb/chroma:latest
     container_name: chromadb
